@@ -87,7 +87,7 @@ export function SpaceAuth({ space, children }: Props) {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: `${window.location.origin}${config.path}`,
           data: { space },
         },
       });
