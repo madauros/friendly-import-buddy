@@ -45,11 +45,6 @@ export function SpaceAuth({ space, children }: Props) {
     );
     return () => sub.subscription.unsubscribe();
   }, [client]);
-      setSession(data.session);
-      setReady(true);
-    });
-    return () => sub.subscription.unsubscribe();
-  }, [client]);
 
   useEffect(() => {
     let active = true;
