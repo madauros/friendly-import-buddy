@@ -37,7 +37,14 @@ export function SpaceAuth({ space, children }: Props) {
     const { data: sub } = client.auth.onAuthStateChange((_e, s) => {
       setSession(s);
     });
-    client.auth.getSession().then(({ data }) => {
+    consumeAuthRedirect(client).then(() =>
+      client.auth.getSession().then(({ data }) => {
+        setSession(data.session);
+        setReady(true);
+      }),
+    );
+    return () => sub.subscription.unsubscribe();
+  }, [client]);
       setSession(data.session);
       setReady(true);
     });
