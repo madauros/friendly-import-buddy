@@ -1,0 +1,2 @@
+ALTER TABLE public.teacher_classes DROP CONSTRAINT IF EXISTS teacher_classes_teacher_id_fkey;
+ALTER TABLE public.teacher_classes ADD CONSTRAINT teacher_classes_teacher_id_fkey FOREIGN KEY (teacher_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
