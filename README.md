@@ -3,7 +3,7 @@
 import a project from GitHub https://github.com/michael5787/friendly-ghost-importer
 
 
-**Live app**: https://friendly-ghost-importer.lovable.app
+**Live app**: https://friendly-import-buddy.lovable.app
 
 ## Development
 
