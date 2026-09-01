@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { SPACE_LABEL, STATUS_LABEL, type SpaceKey } from "@/lib/spaces";
+import { setUserPassword } from "@/lib/admin-users.functions";
+import { PasswordField } from "@/components/PasswordField";
 
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 type LevelRow = Database["public"]["Tables"]["levels"]["Row"];
@@ -229,6 +231,25 @@ function UserEditor({
   const [levelId, setLevelId] = useState(row.level_id ?? "");
   const [classId, setClassId] = useState(row.class_id ?? "");
   const [teacherClasses, setTeacherClasses] = useState<string[]>(teacherClassIds);
+  const [newPassword, setNewPassword] = useState("");
+  const [pwBusy, setPwBusy] = useState(false);
+  const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const updatePasswordFn = useServerFn(setUserPassword);
+
+  const updatePassword = async () => {
+    if (newPassword.length < 6) return;
+    setPwBusy(true);
+    setPwMsg(null);
+    try {
+      await updatePasswordFn({ data: { userId: row.id, password: newPassword } });
+      setNewPassword("");
+      setPwMsg({ ok: true, text: "تم تحديث كلمة المرور." });
+    } catch {
+      setPwMsg({ ok: false, text: "تعذّر تحديث كلمة المرور. تأكد من صلاحيات المشرف العام." });
+    }
+    setPwBusy(false);
+  };
+
 
   const filteredClasses = levelId === "" ? classes : classes.filter((c) => c.level_id === levelId);
 
@@ -311,6 +332,39 @@ function UserEditor({
       </select>
       {space === "taleem" ? (
         <fieldset className="sm:col-span-3">
+          <legend className="mb-2 text-xs font-semibold text-muted-foreground">
+            الأقسام المسندة إلى الأستاذ (يمكن اختيار أكثر من قسم)
+          </legend>
+          <div className="flex flex-wrap gap-2">
+            {classes.length === 0 ? (
+              <span className="text-xs text-muted-foreground">لا توجد أقسام بعد.</span>
+            ) : (
+              classes.map((c) => {
+                const checked = teacherClasses.includes(c.id);
+                return (
+                  <label
+                    key={c.id}
+                    className={`flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1 text-xs transition-colors ${
+                      checked
+                        ? "border-primary bg-primary/10 text-foreground"
+                        : "border-border bg-card text-muted-foreground"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      className="accent-primary"
+                      checked={checked}
+                      onChange={() => toggleTeacherClass(c.id)}
+                    />
+                    {c.name}
+                    <span className="text-muted-foreground">({levelNameOfClass(c)})</span>
+                  </label>
+                );
+              })
+            )}
+          </div>
+        </fieldset>
+      <fieldset className="sm:col-span-3">
           <legend className="mb-2 text-xs font-semibold text-muted-foreground">
             الأقسام المسندة إلى الأستاذ (يمكن اختيار أكثر من قسم)
           </legend>
