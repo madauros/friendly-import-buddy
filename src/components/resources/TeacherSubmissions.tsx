@@ -20,7 +20,38 @@ export function TeacherSubmissions({
   const [classId, setClassId] = useState("all");
   const [query, setQuery] = useState("");
   const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [grades, setGrades] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
+  const [gradeBusy, setGradeBusy] = useState<string | null>(null);
+
+  const saveGrade = async (row: SubmissionItem) => {
+    const raw = (grades[row.id] ?? "").trim();
+    const value = Number(raw.replace(",", "."));
+    if (raw === "" || Number.isNaN(value) || value < 0 || value > 20) {
+      setError("أدخل نقطة صحيحة بين 0 و 20.");
+      return;
+    }
+    setGradeBusy(row.id);
+    const { error: err } = await client
+      .from("submissions")
+      .update({ grade: value, graded_at: new Date().toISOString() })
+      .eq("id", row.id);
+    if (err) {
+      setError("تعذّر حفظ النقطة.");
+      setGradeBusy(null);
+      return;
+    }
+    await notify(client, {
+      userId: row.student_id,
+      actorId: teacherId,
+      kind: "grade",
+      title: `نقطتك في «${row.resource_title}»: ${value}/20`,
+      submissionId: row.id,
+    });
+    setGrades((g) => ({ ...g, [row.id]: "" }));
+    setGradeBusy(null);
+    await reload();
+  };
 
   const className = (id: string | null) => classes.find((c) => c.id === id)?.name ?? "بدون قسم";
 
